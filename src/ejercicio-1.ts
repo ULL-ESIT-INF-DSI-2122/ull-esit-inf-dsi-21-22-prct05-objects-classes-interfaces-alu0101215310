@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-enum Types {
+export enum Types {
   acero = 0,
   agua = 1,
   bicho = 2,
@@ -20,7 +20,7 @@ enum Types {
   volador = 17
 };
 
-enum TypeStats {
+export enum TypeStats {
   puntosDeSalud = 0,
   ataque = 1,
   defensa = 2,
@@ -29,10 +29,25 @@ enum TypeStats {
   velocidad = 5
 }
 
-type Stats = [string, number];
-type pokedexPos = [number, Pokemon];
+export type Stats = [string, number];
+export type pokedexPos = [number, Pokemon];
 
-class Pokemon {
+/**
+ * @class Pokemon : representa un pokemon con sus caracteerísticas
+ * @method getName : Devuelve el nombre el Pokemon
+ * @method setType : Define el tipo principal del Pokemon
+ * @method getType : Devuelve el tipo principal del Pokemon
+ * @method setSecondType : Define el tipo secundario del Pokemon
+ * @method getSecondType : Devuelve el tipo secundario del Pokemon
+ * @method setHeight : Define la altura del Pokemon en cm
+ * @method getHeight : Devuelve la altura del Pokemon en cm
+ * @method setWeight : Define el peso del Pokemon en kg
+ * @method getWeight : Devuelve el peso del Pokemon en kg
+ * @method setStats : Define las estadísticas del Pokemon
+ * @method getStats : Devuelve las estadísticas del Pokemon
+ * @method print : Muestra por pantalla la ficha del Pokemon
+ */
+export class Pokemon {
   private pokemonType : string;
   private pokemonSecondType : string;
   private pokemonHeight : number;
@@ -97,7 +112,13 @@ class Pokemon {
   }
 };
 
-class Pokedex {
+/**
+ * @class Pokedex : Representa una Pokedex que almacena Pokemons
+ * @method addPokemon : Añade un Pokemon a la lista de la Pokedex
+ * @method selectPoke : Selecciona un Pokemon de la lista
+ * @method print : Muestra por pantalla la Pokedex completa
+ */
+export class Pokedex {
   private list : pokedexPos[];
 
   constructor() {
@@ -120,7 +141,14 @@ class Pokedex {
   }
 };
 
-class Combat {
+/**
+ * @class Combat : Representa una simulación de combate entre dos Pokemons
+ * @method start : Inicia el combate y lleva el seguimiento del mismo
+ * @method damageCalculator : Devuelve el daño inflingido por ambos Pokemons
+ * @method physicalOrEspecial : Determina si un Pokemon es físico o especial
+ * @method efectividad : Determina cuan efectivo es un Pokemon frente al otro
+ */
+export class Combat {
   constructor() {}
 
   start(firstPoke : Pokemon, secondPoke : Pokemon) {
