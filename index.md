@@ -208,6 +208,10 @@ Pokemon que se quiere añadir, el cual se pasa como argumento.
 Esta función simplemente buscará el número indicado entre las tuplas de la Pokedex
 y devolverá el Pokemon al que se le asocia. A continuación una serie de tests realizados para comprobar su correcto funcionamiento:
 ```typescript
+const pokedex = new Pokedex();
+pokedex.addPokemon(poke1);
+pokedex.addPokemon(poke2);
+
 describe('Pokedex class test', () => {
   it('typeOf and result selectPoke()', () => {
     assert.typeOf(pokedex.selectPoke(1).getName(), 'string');
@@ -440,6 +444,8 @@ export enum Types {
 A continuación una serie de tests realizados para comprobar su correcto funcionamiento
 teniendo en cuenta los Pokemons creados previamente:
 ```typescript
+const combate = new Combat();
+
   it('typeOf and result efectividad()', () => {
     assert.typeOf(combate.efectividad(poke1.getType(),
         poke2.getSecondType()), 'number');
@@ -676,3 +682,447 @@ así con el combate.
 
 Todo este proceso se repetirá tantos turnos como hagan falta hata que uno de los 
 combatientes se debilite.
+
+## Ejercicio 2 - Conecta 4
+
+Para este segundo ejercicio deberemos desarrollar una serie de clases necesarias para
+poder implementar el típico juego conecta 4. Dicho juego se llevará a cabo por turnos
+entre dos jugadores, los cuales tenddrán que ir introduciendo por consola la posición
+en la que van a querer jugar sus fichas, pudiendo ver en todo momento como se encuentra
+el tablero de juego. El objetivo de cada jugador, como su nombre indica, es conseguir concatenar 4 fichas en cualquiera de las direcciones.
+
+### Clase Ficha
+
+Para lograr el objetivo anterior, empezaremos creando una clase que sea capaz de 
+representar las fichas que se usan en el juego. Dicho objeto deberá ser capaz de 
+mostrar si esta en juego o no, y a quien pertenece.
+
+#### Constructor y propiedades
+
+```typescript
+  private owner : boolean;
+
+  constructor(private fill : boolean) {}
+```
+A la hora de crear un objet ficha deberemos especificar si queremos que la ficha
+forme parte del juego, es decir, que tenga contenido, o no, por ello cuando se hace una
+llamada constructor se le pasa un boolean, el cual se asignará a su propiedad privada
+fill que determinará lo mencionado previamente. Además la ficha también cuenta con 
+otra propiedad privada de tipo boolean que determinará que jugador pertenece, siendo
+true una ficha del jugador 1, y false del jugador 2.
+
+#### Seters y Geters
+
+```typescript
+  setFill(state : boolean) {
+    this.fill = state;
+  }
+  getFill() {
+    return this.fill;
+  }
+
+  setOwner(player : boolean) {
+    this.owner = player;
+  }
+  getOwner() {
+    return this.owner;
+  }
+```
+Como únicas funciones de la cllase cnos encontramos con una serie de seters y geters que
+permitirán definir u obtener el valor de las propiedades de la clase.A continuación una serie de tests realizados para comprobar su correcto funcionamiento:
+```typescript
+const ficha = new Ficha(true);
+ficha.setOwner(true);
+
+describe('Ficha class test', () => {
+  it('typeOf and result getFill()', () => {
+    assert.typeOf(ficha.getFill(), 'boolean');
+    assert.equal(ficha.getFill(), true);
+  });
+  it('typeOf and result getOwner()', () => {
+    assert.typeOf(ficha.getOwner(), 'boolean');
+    assert.equal(ficha.getOwner(), true);
+  });
+});
+```
+
+### Clase Tablero
+
+Como segunda clase nos encontramos con una capaz de crear un objeto que representa
+un tablero de dimensiones 6x7 donde se llevará a cabo el juego. Es necesario que 
+el tablero esté formado de objetos tipo Ficha y que los usuarios puedan interactuar
+con él durante la partida, añadiendo sus fichas en turnos alternos y recibiendo
+en todo momento la información necesaria para el juego, así como la resolución
+de la partida una vez haya confirmado que ha finalizado.
+
+#### Constructor y propiedades
+```typescript
+  private tab : wallet[] = [];
+  private winner : boolean;
+
+  constructor() {
+    for (let i = 0; i < 6; i++) {
+      const col : Ficha[] = [];
+      for (let j = 0; j < 7; j++) col.push(new Ficha(false));
+      this.tab.push(col);
+    }
+  }
+```
+El obejeto creado que represente el tablero de juego deberá tener una dimensión de 
+6x7, por ello a la hora de llamar al constructor,mediante el uso de unas variables 
+auxiliares, inicializará su propiedad privada tab para que cumpla con este requisito. 
+Hay que destacar que la propiedad tab es un vector de un tipo de dato creado, el cual 
+representa un vector de Ficha, por lo que estaríamos hablando de un vector de vectores
+de tipo Ficha.
+```typescript
+export type wallet = Ficha[]
+```
+Como se explicaba previamente, el juego se lleva a cabo entre dos jugadores, los cuales
+están reresentado con un true y un false. Teniendo esto en cuenta vemos que el objeto
+Tablero también cuenta con una propiedad privada llamada winner, la cual es de tipo 
+boolean y representará quien es el ganador de la partida.
+
+#### Función print()
+
+De forma similar al ejercicio anterior, se empezarán explicando los métodos de abajo
+hacia arriba con el fin de entender las llamadas a dichas funciones por parte de las
+que ocupan las primeras posiciones.
+```typescript
+  print() {
+    const x:string[] = [];
+    this.tab.forEach((row) => {
+      let y = '';
+      row.forEach((col) => {
+        if (col.getFill() === false) y += ' - ';
+        else if (col.getOwner() === false) y += ' ○ ';
+        else y += ' ● ';
+      });
+      x.push(y);
+    });
+    x.reverse();
+    console.log(x);
+  }
+```
+La clase cuenta con una función print(), la cual se encargará de recorrer las diferentes
+posiciones del tablero, y mediante unas variables auxiliares ir gruardando el estado
+de la ficha. En caso de que la ficha este vacía, se almacenará un guión medio, en caso 
+opuesto se consultará a quien pertenece, diferenciando círculos rellenos para el 
+primer jugador y círculos vacíos para el segundo. Por último se muestra por pantalla
+tras darle la vuelta para que obtenga la forma deseada.
+
+#### Función win()
+
+```typescript
+  win(x : number, y : number, counter : number, dir : string) {
+    if (dir === direction[0] && x != 5) {
+      if (this.tab[x + 1][y].getOwner() === this.tab[x][y].getOwner()) {
+        counter += this.win(x + 1, y, counter, direction[0]);
+      }
+    }
+    if (dir === direction[1] && x != 5 && y != 6) {
+      if (this.tab[x + 1][y + 1].getOwner() === this.tab[x][y].getOwner()) {
+        counter += this.win(x + 1, y + 1, counter, direction[1]);
+      }
+    }
+    if (dir === direction[2] && x != 5 && y != 0) {
+      if (this.tab[x + 1][y - 1].getOwner() === this.tab[x][y].getOwner()) {
+        counter += this.win(x + 1, y - 1, counter, direction[2]);
+      }
+    }
+    if (dir === direction[3] && y != 6) {
+      if (this.tab[x][y + 1].getOwner() === this.tab[x][y].getOwner()) {
+        counter += this.win(x, y + 1, counter, direction[3]);
+      }
+    }
+    if (dir === direction[4] && y != 0) {
+      if (this.tab[x][y - 1].getOwner() === this.tab[x][y].getOwner()) {
+        counter += this.win(x, y - 1, counter, direction[4]);
+      }
+    }
+    if (dir === direction[5] && x != 0) {
+      if (this.tab[x - 1][y].getOwner() === this.tab[x][y].getOwner()) {
+        counter += this.win(x - 1, y, counter, direction[5]);
+      }
+    }
+    if (dir === direction[6] && x != 0 && y != 6) {
+      if (this.tab[x - 1][y + 1].getOwner() === this.tab[x][y].getOwner()) {
+        counter += this.win(x - 1, y + 1, counter, direction[6]);
+      }
+    }
+    if (dir === direction[7] && x != 0 && y != 0) {
+      if (this.tab[x - 1][y - 1].getOwner() === this.tab[x][y].getOwner()) {
+        counter += this.win(x - 1, y - 1, counter, direction[7]);
+      }
+    }
+    return counter;
+  }
+```
+La función win() se trata de una función recursiva que llevará el conteo de cuantas
+fichas de forma consecutiva, pretenecientes al mismo jugador, hay en el tablero.
+
+Para ello recibirá la posición a analizar, un contador y una dirección, esta última 
+definida mediante un enumerado. 
+```typescript
+export enum direction {
+  n = 0,
+  ne = 1,
+  no = 2,
+  e = 3,
+  o = 4,
+  s = 5,
+  se = 6,
+  so = 7
+}
+```
+El contador en primer lugar siempre será 1, ya que esta función es invocada por una 
+primera ficha, y la dirección será la misma que se comprobó para ser invocada (se 
+explica mejor en la función check). El método tendrá que comprobar si la ficha que 
+sigue la dirección que se le dio es del mismo propietario, y si es así llamar a la 
+función de nuevo. Este proceso se repetirá hasata que esta condicion no se cumpla, 
+evolviendo de esta forma la suma de todas las veces que se ha invocado esta función 
+más el contaor inicial.
+
+A continuación una serie de tests realizados para comprobar su correcto funcionamiento:
+```typescript
+  const tab = new Tablero();
+
+  it('typeOf and result win()', () => {
+    assert.typeOf(tab.win(1, 4, 1, 's'), 'number');
+    assert.equal(tab.win(1, 4, 1, 's'), 2);
+  });
+```
+
+#### Función check()
+
+```typescript
+check(x : number, y : number) {
+    let counter: number = 1;
+    if (x != 5) {
+      if (this.tab[x + 1][y].getOwner() === this.tab[x][y].getOwner()) {
+        if (counter <= this.win(x + 1, y, 1, direction[0])) {
+          counter = this.win(x + 1, y, 1, direction[0]) + 1;
+        }
+      }
+    }
+    if (x != 5 && y != 6) {
+      if (this.tab[x + 1][y + 1].getOwner() === this.tab[x][y].getOwner()) {
+        if (counter <= this.win(x + 1, y + 1, 1, direction[1])) {
+          counter = this.win(x + 1, y + 1, 1, direction[1]) + 1;
+        }
+      }
+    }
+    if (x != 5 && y != 0) {
+      if (this.tab[x + 1][y - 1].getOwner() === this.tab[x][y].getOwner()) {
+        if (counter <= this.win(x + 1, y - 1, 1, direction[2])) {
+          counter = this.win(x + 1, y - 1, 1, direction[2]) + 1;
+        }
+      }
+    }
+    if (y != 6) {
+      if (this.tab[x][y + 1].getOwner() === this.tab[x][y].getOwner()) {
+        if (counter <= this.win(x, y + 1, 1, direction[3])) {
+          counter = this.win(x, y + 1, 1, direction[3]) + 1;
+        }
+      }
+    }
+    if (y != 0) {
+      if (this.tab[x][y - 1].getOwner() === this.tab[x][y].getOwner()) {
+        if (counter <= this.win(x, y - 1, 1, direction[4])) {
+          counter = this.win(x, y - 1, 1, direction[4]) + 1;
+        }
+      }
+    }
+    if (x != 0) {
+      if (this.tab[x - 1][y].getOwner() === this.tab[x][y].getOwner()) {
+        if (counter <= this.win(x - 1, y, 1, direction[5])) {
+          counter = this.win(x - 1, y, 1, direction[5]) + 1;
+        }
+      }
+    }
+    if (x != 0 && y != 6) {
+      if (this.tab[x - 1][y + 1].getOwner() === this.tab[x][y].getOwner()) {
+        if (counter <= this.win(x - 1, y + 1, 1, direction[6])) {
+          counter = this.win(x - 1, y + 1, 1, direction[6]) + 1;
+        }
+      }
+    }
+    if (x != 0 && y != 0) {
+      if (this.tab[x - 1][y - 1].getOwner() === this.tab[x][y].getOwner()) {
+        if (counter <= this.win(x - 1, y - 1, 1, direction[7])) {
+          counter = this.win(x - 1, y - 1, 1, direction[7]) + 1;
+        }
+      }
+    }
+    return (counter === 4) ? true : false;
+  }
+```
+Esta función será la encargada de comprobar si algún jugador ha ganado. Para ello, a
+partide la posición de una de las fichas deberá analizar todas las adyacentes y 
+comprobar si pertenecen al mismo jugador.
+
+Hay que tener en cuenta que no puedes visitar una posición que se encuentra fuera del
+tablero, por lo que contando con ello, el método llamaría a la función win() a la que
+le envíaría la posición que peretence al mismo propietario, con el fin de que el
+resultado sea 4, o en su defecto mayor que en cualquier otra dirección.
+
+Una ve ha analizado todas las posiciones comprobará si el contador de fichas consecutivas
+es igual a 4, en cuyo caso devolverá true, habiendo encontrado un resultado ganador. En 
+defecto devolverá false. A continuación una serie de tests realizados para comprobar su 
+correcto funcionamiento:
+```typescript
+  it('typeOf and result check()', () => {
+    assert.typeOf(tab.check(1, 4), 'boolean');
+    assert.equal(tab.check(1, 4), false);
+  });
+``` 
+
+#### Función insert()
+
+```typescript
+  insert(pos : number, prop : boolean) {
+    let confirm : boolean = false;
+    let row : number;
+    for (let i = 0; i < 6; i++) {
+      if (this.tab[i][pos - 1].getFill() === false && confirm === false) {
+        this.tab[i][pos - 1].setOwner(prop);
+        this.tab[i][pos - 1].setFill(true);
+        confirm = true;
+        row = i;
+        const posib = this.check(i, pos - 1);
+        if (posib === true) this.winner = prop;
+      }
+    }
+    return confirm;
+  }
+```
+Esta función será la encargada de insertar las fichas en tablero. Para ello recibirá 
+un número que indicará la columna en la que se debe insertar, y un boolean que 
+coresponde al propietario de la ficha a insertar.
+ 
+El método comprobará si la posición más baja de la columna esta vacía, si es así la 
+llenará con la ficha del jugador que la haya puesto, confirmará la jugada y 
+posteriormente invocará a la función check para comprobar si se ha completado el 4
+en raya. De ser así se asignaría la true o false a la propiedad del table winner, 
+representando así al ganador. 
+  
+En caso de que la posición más baja de la coumna esté ocupada, irá suiendo fila a 
+fila buscando hueco hasta encontrarlo y realizar todo lo anterior. La función 
+devolverá true o false dependiendo de si la ficha se insertó o no (por ejemplo si
+está la columna llena no se podrá guardar ahí). A continuación una serie de tests 
+realizados para comprobar su correcto funcionamiento:
+```typescript
+  it('typeOf and result insert()', () => {
+    assert.typeOf(tab.insert(4, true), 'boolean');
+    assert.equal(tab.insert(4, true), true);
+  });
+```
+
+#### Función wallets()
+
+```typescript
+  wallets() {
+    const fichasPlayer : wallet[] = [];
+    const firstPlayer : Ficha[] = [];
+    const secondPlayer : Ficha[] = [];
+    for (let i = 0; i < 21; i++) {
+      const ficha = new Ficha(true);
+      ficha.setOwner(true);
+      firstPlayer.push(ficha);
+    }
+    for (let i = 0; i < 21; i++) {
+      const ficha = new Ficha(true);
+      ficha.setOwner(false);
+      secondPlayer.push(ficha);
+    }
+    fichasPlayer.push(firstPlayer);
+    fichasPlayer.push(secondPlayer);
+    return fichasPlayer;
+  }
+```
+Esta función se encargará de generar y devolver un vector de Wallet (tipo de dato 
+creado) de dos posiciones que representará las fichas de cada jugador. En cada uno
+de los dos vectores de Fichas se almacenarán 21 de ellas, teniendo en cuenta que en
+la primera posición el propietario será true, y en la segunda será false.
+
+#### Función game()
+
+```typescript
+game() {
+    const scanf = require('scanf');
+    const firstPlayerWin : boolean = false;
+    const secondPlayerWin : boolean = false;
+    const fichasJuego = this.wallets();
+    let confirm : boolean = false;
+    let counter : number = 1;
+    while (firstPlayerWin === false && secondPlayerWin === false &&
+      fichasJuego[0].length != 0 && fichasJuego[1].length != 0 &&
+        this.winner === undefined) {
+      console.log(`\nTurno ${counter}\n`);
+      this.print();
+      let firstPlay : number = 0;
+      while (firstPlay < 1 || firstPlay > 7) {
+        console.log('Jugador 1, selecciona una columna de la 1 a la 7: ');
+        firstPlay = scanf('%d');
+      }
+      confirm = this.insert(firstPlay, true);
+      while (confirm != true) {
+        console.log('Esa columna está llena, selecciona otra: ');
+        firstPlay = scanf('%d');
+        while (firstPlay < 1 || firstPlay > 7) {
+          console.log('Selecciona una columna de la 1 a la 7: ');
+          firstPlay = scanf('%d');
+        }
+        confirm = this.insert(firstPlay, true);
+      }
+      fichasJuego[0].pop();
+      counter++;
+      if (this.winner === undefined) {
+        console.log(`\nTurno ${counter}\n`);
+        this.print();
+        let secondPlay : number = 0;
+        while (secondPlay < 1 || secondPlay > 7) {
+          console.log('Jugador 2, selecciona una columna de la 1 a la 7: ');
+          secondPlay = scanf('%d');
+        }
+        confirm = this.insert(secondPlay, false);
+        while (confirm != true) {
+          console.log('Esa columna está llena, selecciona otra: ');
+          secondPlay = scanf('%d');
+          while (secondPlay < 1 || secondPlay > 7) {
+            console.log('Selecciona una columna de la 1 a la 7: ');
+            secondPlay = scanf('%d');
+          }
+          confirm = this.insert(secondPlay, false);
+        }
+        fichasJuego[1].pop();
+      }
+      counter++;
+    }
+    this.print();
+    if (fichasJuego[0].length != 0 && fichasJuego[1].length != 0) {
+      return (this.winner === true) ?
+        console.log(`\nGanó el jugador 1\n`) :
+        console.log(`\nGanó el jugador 2\n`);
+    } else return console.log(`\nHa habido un empate\n`);
+  }
+```
+Esta función será la encargada de llevar el desarrollo del juego. Comienza con la 
+declaración de una serie de variables auxiliares que servirán para controlar el 
+juego, además de la creación de las carteras de fichas de ambos jugadores.
+
+El resto del código consta de un bucle que se repetirá hasta que haya un ganador o
+hasta que los jugadores se queden sin fichas. El bucle se puede dividir en dos grande
+bloques, un primero en que juega el primer jugador, y otro en el que juega el segundo.
+
+Al principio del turno de cada jugador se le mostrará el estado del tablero mediante
+el uso de la función print(), y seguidamente se le pedirá que introduza por teclado 
+la columna en la que querrá jugar su ficha mediante el métdo scanf(). Hay que tener en
+cuenta que la columna debe tener un valor entre 1 y 7, y que en caso contrario se 
+repetirá la petición hasta que el valor sea válido. Una vez se reciba el valor, este
+se pasará a la función insert la cual devolverá true si se ha efectuado correctamente, 
+y false si la columna estaba llena, pidiendo una nueva columna al jugador.
+
+El turno de cada jugador finalizará eliminando una ficha de su monedero y comprobando 
+si se ha establecido un gandor (en tal caso se acaba el juego sin que juegue nadie más).
+Finalmente se muestra por pantalla el tablero final y se señala al vencedor, o en su
+defecto, que la partida ha acabado en empate.
