@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
-type wallet = Ficha[]
+export type wallet = Ficha[]
 
-enum direction {
+export enum direction {
   n = 0,
   ne = 1,
   no = 2,
@@ -12,7 +12,14 @@ enum direction {
   so = 7
 }
 
-class Ficha {
+/**
+ * @class Ficha :Representa una ficha del tablero
+ * @method setFill : Define si la ficha esta vacía o no
+ * @method getFill : Devuelve el estado de la ficha
+ * @method setOwner : Estableece el propietario de la ficha
+ * @method getOwner : Devuelve el propietario de la ficha
+ */
+export class Ficha {
   private owner : boolean;
 
   constructor(private fill : boolean) {}
@@ -32,7 +39,20 @@ class Ficha {
   }
 };
 
-class Tablero {
+/**
+ * @class Tablero : Representa el tablero de juego de dimensión 6x7
+ * @method game : Inicia el juego y lleva el seguimiento del mismo, además
+ * se encarga de pedir a los jugadores sus movmientos
+ * @method wallets : Crea un vector que representa las fichas de cada jugador
+ * @method insert : Confirma donde se ha insertado la ficha indicada
+ * @method check : Comprueba si existe alguna ficha adyacente del mismo
+ * jugador para determinar hacia que lado posría ser el 4 en raya
+ * @method win : Comprueba en la dirección indicada cuantas fichas del
+ * mismo jugador hay de forma consecutiva
+ * @method print : Muestra el estado del tablero haciendo uso de caractéres
+ * especiales teniendo en cuenta el estado de las fichas y su propietario
+ */
+export class Tablero {
   private tab : wallet[] = [];
   private winner : boolean;
 
